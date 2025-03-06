@@ -1,8 +1,14 @@
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
+from dotenv import load_dotenv
+import os
 
-TOKEN = "7554051873:AAGHIot1-qFu7or0RGTsTBslF6Mitnid95k"
+load_dotenv()  # Загружаем переменные из .env
+TOKEN = os.getenv("TOKEN")
+
+if not TOKEN:
+    raise ValueError("Токен не найден в .env файле!")
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 dp = Dispatcher()

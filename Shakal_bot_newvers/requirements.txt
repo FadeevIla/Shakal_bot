@@ -1,3 +1,4 @@
 aiogram
-pymorphy2
+pymystem3
 asyncio
+dotenv

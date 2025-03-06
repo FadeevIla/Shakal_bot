@@ -5,7 +5,6 @@ import random
 from config import bot, dp, chat_states, chat_chance
 from utils import get_by_word_trigger, get_answer_to_question, get_rhymes
 from quotes import generate_quote
-from llama_chat import chat_with_llama
 
 
 @dp.message(Command("shakal"))

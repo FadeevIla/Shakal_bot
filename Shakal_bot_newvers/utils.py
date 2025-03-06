@@ -1,8 +1,8 @@
 import re
-import pymorphy2
 import random
+from pymystem3 import Mystem
 
-morph = pymorphy2.MorphAnalyzer()
+mystem = Mystem()
 
 TRIGGERS = [
     (re.compile(r'^к[оа]роч[ье]?$', re.I), 'У кого короче, тот дома сидит!'),
@@ -50,8 +50,15 @@ def get_first_syllable(word):
 
 def get_rhyme(word):
     """ Генерирует рифму для слова """
-    parsed = morph.parse(word)[0]
-    if "NOUN" not in parsed.tag and "ADJF" not in parsed.tag:
+    # Используем Mystem для морфологического анализа
+    parsed = mystem.analyze(word)
+    if not parsed or "analysis" not in parsed[0] or not parsed[0]["analysis"]:
+        return None
+
+    # Проверка, является ли слово существительным или прилагательным
+    lexeme = parsed[0]["analysis"][0]["lex"]
+    tag = parsed[0]["analysis"][0].get("gr", "")
+    if "S" not in tag and "A" not in tag:  # "S" - существительное, "A" - прилагательное
         return None
 
     syllable = get_first_syllable(word)
