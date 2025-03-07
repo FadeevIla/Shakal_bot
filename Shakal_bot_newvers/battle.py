@@ -84,7 +84,7 @@ async def accept_fight(callback_query: CallbackQuery):
 
         user_id = int(parts[2])
         opponent_id = int(parts[3])
-        bet = float(parts[4])  # Теперь правильно берём пятый элемент
+        bet = round(float(parts[4]), 1)  # Округляем ставку до 1 знака после запятой
     except (ValueError, IndexError) as e:
         print(f"ERROR: {e}")  # Логируем ошибку
         await callback_query.answer("❌ Ошибка в данных дуэли.", show_alert=True)
@@ -112,16 +112,21 @@ async def accept_fight(callback_query: CallbackQuery):
 
     winner_id, loser_id = random.sample([user_id, opponent_id], 2)
 
-    update_weight(chat_id, winner_id, bet)
-    update_weight(chat_id, loser_id, -bet)
+    # Обновляем только вес, не изменяя времени кормления
+    update_weight(chat_id, winner_id, bet, update_feed_time=False)
+    update_weight(chat_id, loser_id, -bet, update_feed_time=False)
 
     winner_name = await get_user_name(chat_id, winner_id)
     loser_name = await get_user_name(chat_id, loser_id)
 
+    # Получаем новый вес победителя
+    winner_new_weight = round(get_weight(chat_id, winner_id), 1)
+
     await callback_query.message.answer(
         f"🔥 Дуэль завершена!\n"
         f"⚔ {user_name} VS {opponent_name}\n"
-        f"🏆 Победил {winner_name} и забрал {bet} кг веса!"
+        f"🏆 Победил {winner_name} и забрал {bet} кг веса!\n"
+        f"📊 Теперь его вес: {winner_new_weight} кг"
     )
 
     # Удаляем сообщение с кнопками

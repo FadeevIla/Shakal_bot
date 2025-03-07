@@ -45,12 +45,17 @@ def load_data():
             return json.load(f)
     return {}
 
+
+# Функция для записи данных в JSON (с округлением)
 def save_data(data):
-    try:
-        with open(DATA_FILE, "w") as f:
-            json.dump(data, f, indent=4)
-    except IOError as e:
-        print(f"Ошибка при сохранении данных: {e}")
+    # Округление весов до 1 знака после запятой
+    for chat_id, users in data.items():
+        for user_id, user_data in users.items():
+            user_data["weight"] = round(user_data["weight"], 1)
+
+    # Запись данных в JSON
+    with open('data.json', 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 # Функция для получения веса шакала
 def get_weight(chat_id, user_id):
@@ -59,22 +64,26 @@ def get_weight(chat_id, user_id):
     return user_data.get("weight", 0)
 
 # Функция для обновления веса шакала
-def update_weight(chat_id, user_id, weight_change, user_name=None):
+def update_weight(chat_id, user_id, weight_change, user_name=None, update_feed_time=True):
     data = load_data()
     if str(chat_id) not in data:
         data[str(chat_id)] = {}
     if str(user_id) not in data[str(chat_id)]:
-        data[str(chat_id)][str(user_id)] = {"weight": 0, "last_feed_time": 0, "username": user_name}  # Добавляем имя пользователя
+        data[str(chat_id)][str(user_id)] = {"weight": 0, "last_feed_time": 0,
+                                            "username": user_name}  # Добавляем имя пользователя
 
     current_weight = data[str(chat_id)][str(user_id)].get("weight", 0)
     new_weight = current_weight + weight_change
 
     # Обновляем вес пользователя
     data[str(chat_id)][str(user_id)]["weight"] = new_weight
-    # Обновляем время кормления
-    data[str(chat_id)][str(user_id)]["last_feed_time"] = time.time()  # Устанавливаем текущее время
+
+    # Обновляем время кормления только если нужно
+    if update_feed_time:
+        data[str(chat_id)][str(user_id)]["last_feed_time"] = time.time()  # Устанавливаем текущее время
 
     save_data(data)
+
 
 # Функция для получения имени пользователя через API
 async def get_user_name_from_api(chat_id, user_id):
