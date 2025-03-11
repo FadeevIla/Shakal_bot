@@ -1,3 +1,5 @@
+#commands.py
+
 from utils import get_last_feed_time, update_weight, get_weight, get_relax_time, update_relax
 import random
 import time
@@ -36,7 +38,7 @@ async def handle_feed_shakal(message):
 
     # Проверяем, прошло ли достаточно времени для кормления
     time_diff = current_time - last_feed
-    if time_diff < 21600:
+    if time_diff < 21600:  # 21600 секунд = 6 часов
         remaining_time = 21600 - time_diff
         hours = int(remaining_time // 3600)
         minutes = int((remaining_time % 3600) // 60)

@@ -33,7 +33,6 @@ placeholders = {
     "lesson": ["урок", "опыт", "испытание", "жизненную мудрость"]
 }
 
-
 # Шаблоны для генерации
 templates = [
     "Не гоняйте, {patsany}, вы {komu} ещё нужны.",
@@ -54,9 +53,29 @@ templates = [
     "В {pain} находишь правду, а в правде — свою силу."
 ]
 
-# Функция для генерации цитаты
-# Функция для генерации цитаты
+def apply_case(word, case):
+    """Применяет падеж к слову с помощью Mystem."""
+    analyzed = mystem.analyze(word)
+    if analyzed and 'analysis' in analyzed[0] and analyzed[0]['analysis']:
+        lex = analyzed[0]['analysis'][0].get('lex', word)
+    else:
+        lex = word  # Если анализ не удался, используем оригинальное слово
+
+    if case == "gen":
+        # Родительный падеж
+        return mystem.lemmatize(lex)[0] + "а"
+    elif case == "acc":
+        # Винительный падеж
+        return mystem.lemmatize(lex)[0]
+    elif case == "dat":
+        # Дательный падеж
+        return mystem.lemmatize(lex)[0] + "у"
+    else:
+        # Именительный падеж (по умолчанию)
+        return mystem.lemmatize(lex)[0]
+
 def generate_quote():
+    """Генерирует случайную цитату с учетом падежей."""
     template = random.choice(templates)
 
     while '{' in template:
@@ -70,32 +89,20 @@ def generate_quote():
             options = placeholder.split('|')
             replacement = random.choice(options)
 
-        # Применяем падежи через Mystem
-        analyzed = mystem.analyze(replacement)
-
-        # Добавляем проверку на пустой список
-        if analyzed:
-            lex = analyzed[0].get('lex', replacement)
-        else:
-            lex = replacement  # Если анализ не удался, используем оригинальное слово
-
+        # Определяем падеж из плейсхолдера
         if "gen" in placeholder:
-            # Генерация родительного падежа
-            replacement = mystem.lemmatize(lex)[0]
-            replacement = replacement + "а" if replacement.endswith("й") else replacement
+            replacement = apply_case(replacement, "gen")
         elif "acc" in placeholder:
-            # Генерация винительного падежа
-            replacement = mystem.lemmatize(lex)[0]
+            replacement = apply_case(replacement, "acc")
         elif "dat" in placeholder:
-            # Генерация дательного падежа
-            replacement = mystem.lemmatize(lex)[0] + "у" if lex.endswith("ь") else replacement
+            replacement = apply_case(replacement, "dat")
         else:
-            replacement = mystem.lemmatize(lex)[0]  # Лемматизация без изменения падежа
+            replacement = apply_case(replacement, "nom")
 
         template = template[:start] + replacement + template[end + 1:]
 
     return template
 
 # Пример использования
-print(generate_quote())
-
+if __name__ == "__main__":
+    print(generate_quote())

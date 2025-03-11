@@ -1,3 +1,5 @@
+#utils.py
+
 import re
 import random
 from pymystem3 import Mystem
@@ -5,11 +7,17 @@ import json
 import os
 import time
 from config import bot
+from pymorphy2 import MorphAnalyzer  # Добавьте этот импорт
 
 DATA_FILE = "shakal_weight.json"
 FEED_COOLDOWN = 3600  # 1 час в секундах
 
 mystem = Mystem()
+morph = MorphAnalyzer()  # Инициализация морфологического анализатора
+
+# Ваши константы для рифм
+VOWEL_TO_RHYME = {"а": "я", "о": "ё", "у": "ю", "е": "е", "ы": "и", "и": "и", "э": "е", "ю": "ю", "я": "я"}
+VOWELS = "аоуыэеёиюя"
 
 TRIGGERS = [
     (re.compile(r'^к[оа]роч[ье]?$', re.I), 'У кого короче, тот дома сидит!'),
@@ -20,31 +28,64 @@ TRIGGERS = [
 ANSWER_TO_QUESTION = "А тебя ебёт?"
 QUESTION_WORDS = ["когда", "где", "почему", "зачем", "как", "сколько", "что", "кто"]
 
+# Функция для получения первого слога
+def get_first_syllable(word):
+    syllable = ""
+    for letter in word:
+        syllable += letter
+        if letter in VOWELS:
+            break
+    return syllable
+
+# Функция для получения рифмы
+def get_rhyme(word):
+    parsed = morph.parse(word)[0]
+    if "NOUN" not in parsed.tag and "ADJF" not in parsed.tag:
+        return None
+
+    syllable = get_first_syllable(word)
+    if not syllable or syllable == word:
+        return None
+
+    new_vowel = VOWEL_TO_RHYME.get(syllable[-1], syllable[-1])
+    return f"ху{new_vowel}{word[len(syllable):]}"
+
+# Функция для получения рифм из текста
+def get_rhymes(text):
+    return [get_rhyme(word) for word in get_words(text) if get_rhyme(word)]
+
 def get_words(text):
     """ Разбивает текст на слова """
     return re.findall(r'\b\w+\b', text.lower())
 
 def get_by_word_trigger(text):
     """ Проверяет текст на соответствие триггерам """
+    print(f"Проверка триггеров для текста: {text}")  # Логирование
     for word in get_words(text):
         for pattern, response in TRIGGERS:
             if pattern.match(word):
+                print(f"Сработал триггер: {response}")  # Логирование
                 return response
+    print("Триггеры не сработали.")  # Логирование
     return None
 
 def get_answer_to_question(text):
     """ Проверяет, является ли текст вопросом """
+    print(f"Проверка вопроса для текста: {text}")  # Логирование
     if text.strip().endswith("?") or any(qw in text.lower() for qw in QUESTION_WORDS):
+        print("Сработал ответ на вопрос.")  # Логирование
         return ANSWER_TO_QUESTION
+    print("Текст не является вопросом.")  # Логирование
     return None
 
 # Проверка, существует ли файл данных
 def load_data():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r") as f:
+    """Загружает данные из JSON."""
+    try:
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
-    return {}
-
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
 
 # Функция для записи данных в JSON (с округлением)
 def save_data(data):
@@ -54,7 +95,7 @@ def save_data(data):
             user_data["weight"] = round(user_data["weight"], 1)
 
     # Запись данных в JSON
-    with open('data.json', 'w', encoding='utf-8') as f:
+    with open(DATA_FILE, "w", encoding="utf-8") as f:  # Используем DATA_FILE
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 # Функция для получения веса шакала
@@ -69,11 +110,10 @@ def update_weight(chat_id, user_id, weight_change, user_name=None, update_feed_t
     if str(chat_id) not in data:
         data[str(chat_id)] = {}
     if str(user_id) not in data[str(chat_id)]:
-        data[str(chat_id)][str(user_id)] = {"weight": 0, "last_feed_time": 0,
-                                            "username": user_name}  # Добавляем имя пользователя
+        data[str(chat_id)][str(user_id)] = {"weight": 0, "last_feed_time": 0, "username": user_name}
 
     current_weight = data[str(chat_id)][str(user_id)].get("weight", 0)
-    new_weight = current_weight + weight_change
+    new_weight = current_weight + weight_change  # Обновляем вес
 
     # Обновляем вес пользователя
     data[str(chat_id)][str(user_id)]["weight"] = new_weight
@@ -82,8 +122,7 @@ def update_weight(chat_id, user_id, weight_change, user_name=None, update_feed_t
     if update_feed_time:
         data[str(chat_id)][str(user_id)]["last_feed_time"] = time.time()  # Устанавливаем текущее время
 
-    save_data(data)
-
+    save_data(data)  # Сохраняем данные
 
 # Функция для получения имени пользователя через API
 async def get_user_name_from_api(chat_id, user_id):

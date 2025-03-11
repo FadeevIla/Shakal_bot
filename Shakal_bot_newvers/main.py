@@ -1,3 +1,5 @@
+#main.py
+
 import asyncio
 from config import bot, dp
 import handlers

@@ -1,3 +1,5 @@
+#handlers.py
+
 from aiogram import Dispatcher, Bot
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
@@ -6,7 +8,7 @@ from config import bot, chat_states, chat_chance, dp
 from quotes import generate_quote
 from commands import handle_shakal_command, handle_shakalnost_command, handle_feed_shakal, relaxshakal_handler
 from battle import fight_shakal, accept_fight, decline_fight
-from utils import get_top
+from utils import get_top, get_by_word_trigger, get_answer_to_question, get_rhymes
 
 @dp.message(Command("shakal"))
 async def shakal_command(message: Message):
@@ -67,3 +69,29 @@ async def show_top(message: Message):
 @dp.message(F.text.lower().startswith("фас "))
 async def duel_by_text(message: Message):
     await fight_shakal(message)
+
+@dp.message(F.text)
+async def handle_text_messages(message: Message):
+    text = message.text
+    print(f"Получено сообщение: {text}")  # Логирование для отладки
+
+    # Проверка на триггеры
+    trigger_response = get_by_word_trigger(text)
+    if trigger_response:
+        print(f"Сработал триггер: {trigger_response}")  # Логирование
+        await message.reply(trigger_response)
+        return
+
+    # Проверка на вопрос
+    question_response = get_answer_to_question(text)
+    if question_response:
+        print(f"Сработал ответ на вопрос: {question_response}")  # Логирование
+        await message.reply(question_response)
+        return
+
+    # Проверка на рифмы
+    rhymes = get_rhymes(text)
+    if rhymes:
+        print(f"Найдены рифмы: {rhymes}")  # Логирование
+        await message.reply(" ".join(rhymes))
+        return
