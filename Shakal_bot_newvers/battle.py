@@ -127,14 +127,14 @@ async def accept_fight(callback_query: CallbackQuery):
     update_weight(chat_id, loser_id, -bet, update_feed_time=False)
 
     winner_name = await get_user_name(chat_id, opponent_id)  # Получаем имя противника с возможным упоминанием
-    loser_name = await get_user_name(chat_id, user_name)  # Получаем имя противника с возможным упоминанием
+    loser_name = await get_user_name(chat_id, loser_id)  # Получаем имя противника с возможным упоминанием
 
     # Получаем новый вес победителя
     winner_new_weight = round(get_weight(chat_id, winner_id), 1)
 
     await callback_query.message.answer(
         f"🔥 Дуэль завершена!\n"
-        f"⚔ {user_name} VS {opponent_name}\n"
+        f"⚔ {loser_name} VS {opponent_name}\n"
         f"🏆 Победил {winner_name} и забрал {bet} кг веса!\n"
         f"📊 Теперь его вес: {winner_new_weight} кг"
     )
