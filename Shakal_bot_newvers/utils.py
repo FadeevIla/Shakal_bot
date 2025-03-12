@@ -2,22 +2,14 @@
 
 import re
 import random
-from pymystem3 import Mystem
 import json
 import os
 import time
 from config import bot
-from pymorphy2 import MorphAnalyzer  # Добавьте этот импорт
 
 DATA_FILE = "shakal_weight.json"
 FEED_COOLDOWN = 3600  # 1 час в секундах
 
-mystem = Mystem()
-morph = MorphAnalyzer()  # Инициализация морфологического анализатора
-
-# Ваши константы для рифм
-VOWEL_TO_RHYME = {"а": "я", "о": "ё", "у": "ю", "е": "е", "ы": "и", "и": "и", "э": "е", "ю": "ю", "я": "я"}
-VOWELS = "аоуыэеёиюя"
 
 TRIGGERS = [
     (re.compile(r'^к[оа]роч[ье]?$', re.I), 'У кого короче, тот дома сидит!'),
@@ -38,21 +30,6 @@ def get_first_syllable(word):
     return syllable
 
 # Функция для получения рифмы
-def get_rhyme(word):
-    parsed = morph.parse(word)[0]
-    if "NOUN" not in parsed.tag and "ADJF" not in parsed.tag:
-        return None
-
-    syllable = get_first_syllable(word)
-    if not syllable or syllable == word:
-        return None
-
-    new_vowel = VOWEL_TO_RHYME.get(syllable[-1], syllable[-1])
-    return f"ху{new_vowel}{word[len(syllable):]}"
-
-# Функция для получения рифм из текста
-def get_rhymes(text):
-    return [get_rhyme(word) for word in get_words(text) if get_rhyme(word)]
 
 def get_words(text):
     """ Разбивает текст на слова """

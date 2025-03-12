@@ -8,7 +8,7 @@ from config import bot, chat_states, chat_chance, dp
 from quotes import generate_quote
 from commands import handle_shakal_command, handle_shakalnost_command, handle_feed_shakal, relaxshakal_handler
 from battle import fight_shakal, accept_fight, decline_fight
-from utils import get_top, get_by_word_trigger, get_answer_to_question, get_rhymes
+from utils import get_top, get_by_word_trigger, get_answer_to_question
 
 @dp.message(Command("shakal"))
 async def shakal_command(message: Message):
@@ -89,9 +89,3 @@ async def handle_text_messages(message: Message):
         await message.reply(question_response)
         return
 
-    # Проверка на рифмы
-    rhymes = get_rhymes(text)
-    if rhymes:
-        print(f"Найдены рифмы: {rhymes}")  # Логирование
-        await message.reply(" ".join(rhymes))
-        return

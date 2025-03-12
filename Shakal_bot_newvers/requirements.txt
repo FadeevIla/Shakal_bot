@@ -1,4 +1,3 @@
+setuptools
 aiogram
-pymystem3
-asyncio
-dotenv
+python-dotenv
